@@ -8,10 +8,30 @@
 <body>
     <h1>Hello from the Client</h1>
 
+    <input id="message-input" type="text" placeholder="Enter your Message">
+    <button id="send-btn">Send Message</button>
+
     <script src="/socket.io/socket.io.js"></script>
 
+
     <script>
-        const socket = io()
+         const socket = io()
+        const messageInput = document.querySelector('#message-input')
+        const sendBtn = document.querySelector('#send-btn')
+
+        socket.on('message' , (message)=>console.log(message))
+
+        sendBtn.addEventListener('click', ()=>{
+             const message = messageInput.value
+             socket.emit('user-message' , message)
+
+
+        })
+
+
+
+
+    
     </script>
 </body>
 
