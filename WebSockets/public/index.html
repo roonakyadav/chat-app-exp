@@ -1,38 +1,89 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Minimal Chat</title>
+
+  <style>
+    body { font-family: system-ui, Arial; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    #messages { list-style: none; padding: 0; margin: 1rem 0; border: 1px solid #eee; min-height: 120px; }
+    #messages li { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f7f7f7; word-break: break-word; }
+    #messages li.me { background: #e6fff2; text-align: right; }
+    .meta { font-size: 0.85rem; color: #333; display:block; }
+    .text { display:block; margin-top: 0.15rem; }
+    #controls { display:flex; gap:8px; }
+    #message { flex:1; padding:0.5rem; font-size:1rem; }
+    #send-btn { padding:0.5rem 0.75rem; font-size:1rem; }
+  </style>
 </head>
 <body>
-    <h1>Hello from the Client</h1>
+  <h1>Chatting</h1>
 
-    <input id="message-input" type="text" placeholder="Enter your Message">
-    <button id="send-btn">Send Message</button>
+  <ul id="messages" aria-live="polite"></ul>
 
-    <script src="/socket.io/socket.io.js"></script>
+  <div id="controls">
+    <input id="message" type="text" placeholder="Enter message" autocomplete="off" />
+    <button id="send-btn">Send</button>
+  </div>
 
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Ask for username
+    let localUsername = prompt('Enter a username') || '';
+    localUsername = localUsername.trim() || ('User' + Math.floor(Math.random() * 900 + 100));
 
-    <script>
-         const socket = io()
-        const messageInput = document.querySelector('#message-input')
-        const sendBtn = document.querySelector('#send-btn')
+    const socket = io();
 
-        socket.on('message' , (message)=>console.log(message))
+    // Tell server our username
+    socket.emit('set-username', localUsername);
 
-        sendBtn.addEventListener('click', ()=>{
-             const message = messageInput.value
-             socket.emit('user-message' , message)
+    const messagesEl = document.getElementById('messages');
+    const input = document.getElementById('message');
+    const sendBtn = document.getElementById('send-btn');
 
+    function addMessageObj(msg) {
+      const li = document.createElement('li');
 
-        })
+      // user label
+      const meta = document.createElement('span');
+      meta.className = 'meta';
+      meta.textContent = msg.user === localUsername ? 'You' : msg.user;
 
+      // actual text
+      const text = document.createElement('span');
+      text.className = 'text';
+      text.textContent = msg.text;
 
+      li.appendChild(meta);
+      li.appendChild(text);
 
+      if (msg.user === localUsername) {
+        li.classList.add('me');
+      }
 
-    
-    </script>
+      messagesEl.appendChild(li);
+      li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    socket.on('message', (msg) => {
+      addMessageObj(msg);
+    });
+
+    function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      socket.emit('user-message', text);
+      input.value = '';
+      input.focus();
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    input.focus();
+  </script>
 </body>
-
 </html>
