@@ -1,30 +1,250 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Minimal Chat</title>
 
   <style>
-    body { font-family: system-ui, Arial; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
-    #messages { list-style: none; padding: 0; margin: 1rem 0; border: 1px solid #eee; min-height: 120px; }
-    #messages li { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f7f7f7; word-break: break-word; }
-    #messages li.me { background: #e6fff2; text-align: right; }
-    .meta { font-size: 0.85rem; color: #333; display:block; }
-    .text { display:block; margin-top: 0.15rem; }
-    #controls { display:flex; gap:8px; }
-    #message { flex:1; padding:0.5rem; font-size:1rem; }
-    #send-btn { padding:0.5rem 0.75rem; font-size:1rem; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+
+    #app {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      margin: 2rem auto;
+      max-width: 1000px;
+      padding: 2rem;
+      height: calc(100vh - 4rem);
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+    }
+
+    #chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #sidebar {
+      width: 250px;
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 15px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #typing-indicator {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: #666;
+      min-height: 1rem;
+    }
+
+    #online-users {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #online-users li {
+      padding: 0.5rem;
+      margin-bottom: 0.25rem;
+      background: white;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      text-align: center;
+      border: 1px solid #e0e0e0;
+    }
+
+    #messages {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      background: #fafafa;
+      padding: 1rem;
+    }
+
+    #messages li {
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 15px;
+      word-break: break-word;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    #messages li.me {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: right;
+      align-self: flex-end;
+    }
+
+    #messages li:not(.me) {
+      background: white;
+      border: 1px solid #e0e0e0;
+    }
+
+    .meta {
+      font-size: 0.85rem;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .text {
+      display: block;
+    }
+
+    #messages li.me .meta {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    #controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      position: relative;
+    }
+
+    #emoji-panel {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 0.5rem;
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+
+    #emoji-btn {
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #emoji-btn:hover {
+      background: #e0e0e0;
+    }
+
+    .emoji {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+
+    .emoji:hover {
+      background: #fafafa;
+    }
+
+    #message {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 50px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    #message:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    #send-btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
   </style>
 </head>
+
 <body>
-  <h1>Chatting</h1>
+  <div id="app">
+    <div id="chat-container">
+      <h1>Chat Application</h1>
 
-  <ul id="messages" aria-live="polite"></ul>
+      <ul id="messages" aria-live="polite"></ul>
 
-  <div id="controls">
-    <input id="message" type="text" placeholder="Enter message" autocomplete="off" />
-    <button id="send-btn">Send</button>
+      <div id="controls">
+        <input id="message" type="text" placeholder="Enter message" autocomplete="off" />
+        <button id="emoji-btn">😊</button>
+        <button id="send-btn">Send</button>
+        <div id="emoji-panel">
+          <div class="emoji">😀</div>
+          <div class="emoji">😂</div>
+          <div class="emoji">😍</div>
+          <div class="emoji">🤔</div>
+          <div class="emoji">👍</div>
+          <div class="emoji">👎</div>
+          <div class="emoji">❤️</div>
+          <div class="emoji">🔥</div>
+          <div class="emoji">💯</div>
+          <div class="emoji">🙌</div>
+          <div class="emoji">👋</div>
+          <div class="emoji">🎉</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sidebar">
+      <h3>Online Users</h3>
+      <ul id="online-users"></ul>
+      <div id="typing-indicator"></div>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -41,6 +261,11 @@
     const messagesEl = document.getElementById('messages');
     const input = document.getElementById('message');
     const sendBtn = document.getElementById('send-btn');
+    const emojiBtn = document.getElementById('emoji-btn');
+    const emojiPanel = document.getElementById('emoji-panel');
+    const onlineUsersEl = document.getElementById('online-users');
+    const typingIndicatorEl = document.getElementById('typing-indicator');
+    let typingTimeout;
 
     function addMessageObj(msg) {
       const li = document.createElement('li');
@@ -70,11 +295,36 @@
       addMessageObj(msg);
     });
 
+    socket.on('message-history', (messages) => {
+      messages.forEach(msg => addMessageObj(msg));
+    });
+
+    socket.on('online-users', (users) => {
+      onlineUsersEl.innerHTML = '';
+      users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = user;
+        onlineUsersEl.appendChild(li);
+      });
+    });
+
+    socket.on('typing-users', (users) => {
+      if (users.length === 0) {
+        typingIndicatorEl.textContent = '';
+      } else if (users.length === 1) {
+        typingIndicatorEl.textContent = `${users[0]} is typing...`;
+      } else {
+        typingIndicatorEl.textContent = 'Several users are typing...';
+      }
+    });
+
     function sendMessage() {
       const text = input.value.trim();
       if (!text) return;
       socket.emit('user-message', text);
       input.value = '';
+      clearTimeout(typingTimeout);
+      socket.emit('stop-typing');
       input.focus();
     }
 
@@ -83,7 +333,26 @@
       if (e.key === 'Enter') sendMessage();
     });
 
+    input.addEventListener('input', () => {
+      socket.emit('typing');
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => socket.emit('stop-typing'), 1000);
+    });
+
+    emojiBtn.addEventListener('click', () => {
+      emojiPanel.style.display = emojiPanel.style.display === 'grid' ? 'none' : 'grid';
+    });
+
+    document.querySelectorAll('.emoji').forEach(emoji => {
+      emoji.addEventListener('click', () => {
+        input.value += emoji.textContent;
+        emojiPanel.style.display = 'none';
+        input.focus();
+      });
+    });
+
     input.focus();
   </script>
 </body>
+
 </html>
